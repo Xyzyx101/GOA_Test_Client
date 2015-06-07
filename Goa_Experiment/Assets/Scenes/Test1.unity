@@ -513,11 +513,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   localPlayerPrefab: {fileID: 118530, guid: c674b0a6e0cce0343ba1f3ac818003e4, type: 2}
   remotePlayerPrefab: {fileID: 120314, guid: af4b3e75196fad8488ebf37e261931ef, type: 2}
-  remotePlayerColors:
-  - {r: 1, g: 0, b: 0, a: 0}
-  - {r: .0344824791, g: 0, b: 1, a: 0}
-  - {r: 0, g: 1, b: .00689649582, a: 0}
-  - {r: .944827557, g: 1, b: 0, a: 0}
+  playerColors:
+  - {r: 1, g: .389705896, b: .389705896, a: 0}
+  - {r: .424949139, g: .404411793, b: 1, a: 0}
+  - {r: .359071165, g: .786764741, b: .323961943, a: 0}
+  - {r: .937525392, g: 1, b: .352941155, a: 0}
 --- !u!1 &1292278808
 GameObject:
   m_ObjectHideFlags: 0

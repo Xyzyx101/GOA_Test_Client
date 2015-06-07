@@ -31,7 +31,7 @@ public class UDPTestServerConnection : MonoBehaviour {
         txtLocalPort = new System.Random().Next(50000, 51000);
 
         txtServerIp = "127.0.0.1";
-        txtServerPort = 8042;
+        txtServerPort = 27660;
 
         updateDelta = 0;
 
@@ -67,6 +67,8 @@ public class UDPTestServerConnection : MonoBehaviour {
 
         // connect to remote ip and port 
         epRemote = new IPEndPoint(IPAddress.Parse(txtServerIp), txtServerPort);
+
+        //FIXME
         sckCommunication.Connect(epRemote);
 
         // starts to listen to an specific port
@@ -87,7 +89,9 @@ public class UDPTestServerConnection : MonoBehaviour {
 
         while (msgQueue.Count > 0) {
             Command command = DeserializeCommand(msgQueue.Dequeue());
-            updateDelta = Time.realtimeSinceStartup - command.time;
+            if (gameManager.GetLocalPlayer() != null && command.playerId == gameManager.GetLocalPlayer().getId()) {
+                updateDelta = Time.realtimeSinceStartup - command.time;
+            }
             gameManager.ReceiveQueue.Enqueue(command);
         }
     }
