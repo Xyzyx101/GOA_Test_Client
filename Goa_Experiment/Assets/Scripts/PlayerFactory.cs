@@ -5,7 +5,7 @@ public class PlayerFactory : MonoBehaviour {
     UnityStandardAssets.Utility.SmoothFollow smoothFollowScript;
     public GameObject localPlayerPrefab;
     public GameObject remotePlayerPrefab;
-    public Color[] remotePlayerColors;
+    public Color[] playerColors;
 
     private int colorIndex = -1;
 
@@ -23,22 +23,26 @@ public class PlayerFactory : MonoBehaviour {
                 break;
             }
         }
-        Player foo = localPlayer.GetComponent<Player>();
-        return foo;
+        SkinnedMeshRenderer[] renderers = localPlayer.GetComponentsInChildren<SkinnedMeshRenderer>();
+        Color color = PlayerColor(playerId);
+        foreach (SkinnedMeshRenderer renderer in renderers) {
+            renderer.material.SetColor("_Color", color);
+        }
+        return  localPlayer.GetComponent<Player>();
     }
 
     public Player SpawnRemotePlayer(int playerId, float posX, float posZ) {
         GameObject remotePlayer = (GameObject)Instantiate(remotePlayerPrefab, new Vector3(posX, 0, posZ), Quaternion.identity);
         SkinnedMeshRenderer[] renderers = remotePlayer.GetComponentsInChildren<SkinnedMeshRenderer>();
-        Color color = NextColor();
+        Color color = PlayerColor(playerId);
         foreach (SkinnedMeshRenderer renderer in renderers) {
             renderer.material.SetColor("_Color",color);
         }
         return remotePlayer.GetComponent<Player>();
     }
 
-    Color NextColor() {
-        int color = ++colorIndex % remotePlayerColors.Length;
-        return remotePlayerColors[color];
+    Color PlayerColor(int playerId) {
+        int color = playerId % playerColors.Length;
+        return playerColors[color];
     }
 }

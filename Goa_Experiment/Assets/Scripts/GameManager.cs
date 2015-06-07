@@ -5,13 +5,21 @@ using System.Collections.Generic;
 public class GameManager : MonoBehaviour {
     public UDPTestServerConnection serverConnection;
     public PlayerController playerController;
+    public Queue<Command> SendQueue {
+        get {
+            return sendQueue;
+        }
+    }
+    public Queue<Command> ReceiveQueue {
+        get {
+            return receiveQueue;
+        }
+    }
     private Queue<Command> sendQueue = new Queue<Command>();
     private Queue<Command> receiveQueue = new Queue<Command>();
 
     private PlayerFactory playerFactory;
     public Transform[] spawnPoints;
-
-    private int nextSpawnIndex = -1;
 
     private Dictionary<int, Player> players = new Dictionary<int, Player>();
     private Player localPlayer;
@@ -25,6 +33,8 @@ public class GameManager : MonoBehaviour {
         public const int MOVE = 0;
         public const int CONNECT = 1;
         public const int DISCONNECT = 2;
+        public const int SPAWN_LOCAL = 3;
+        public const int SPAWN_REMOTE = 4;
     }
 
     void Awake() {
@@ -32,19 +42,24 @@ public class GameManager : MonoBehaviour {
     }
 
     void Start() {
-        int spawnIndex = NextSpawnIndex();
-        localPlayer = playerFactory.SpawnLocalPlayer(spawnIndex, spawnPoints[spawnIndex].position.x, spawnPoints[spawnIndex].position.z);
-        localPlayerId = ++dummyServerId;
-        localPlayer.setId(localPlayerId);
-        players.Add(localPlayerId, localPlayer);
-        ConnectPlayer(++dummyServerId);
-        ConnectPlayer(++dummyServerId);
-        playerController.Init();
+        Command command = new Command() {
+            playerId = 0,
+            commandType = COMMANDTYPE.CONNECT,
+            time = Time.time,
+            positionX = 0f,
+            positionY = 0f,
+            positionZ = 0f,
+            moveForward = 0f,
+            moveSideways = 0f,
+            jump = false,
+            crouch = false
+        };
+        SendCommand(command);
     }
 
     // Update is called once per frame
     void Update() {
-        FlushQueue();
+        FlushReceiveQueue();
     }
 
     public void SendCommand(Command command) {
@@ -55,9 +70,16 @@ public class GameManager : MonoBehaviour {
         receiveQueue.Enqueue(command);
     }
 
-    public void ConnectPlayer(int playerId) {
-        int spawnIndex = NextSpawnIndex();
-        Player remotePlayer = playerFactory.SpawnRemotePlayer(spawnIndex, spawnPoints[spawnIndex].position.x, spawnPoints[spawnIndex].position.z);
+    public void SpawnLocal(int playerId) {
+        localPlayer = playerFactory.SpawnLocalPlayer(playerId, spawnPoints[playerId].position.x, spawnPoints[playerId].position.z);
+        localPlayer.setId(playerId);
+        players.Add(playerId, localPlayer);
+        playerController.Init();
+    }
+
+    public void SpawnRemote(int playerId) {
+        Player remotePlayer = playerFactory.SpawnRemotePlayer(playerId, spawnPoints[playerId].position.x, spawnPoints[playerId].position.z);
+        remotePlayer.setId(playerId);
         players.Add(playerId, remotePlayer);
     }
 
@@ -69,22 +91,24 @@ public class GameManager : MonoBehaviour {
         return localPlayer;
     }
 
-    void FlushQueue() {
+    void FlushReceiveQueue() {
         Command command;
         Player player;
         while (receiveQueue.Count > 0) {
             command = (Command)receiveQueue.Dequeue();
-            player = players[command.playerId];
-            player.AddCommand(command);
+            switch (command.commandType) {
+                case COMMANDTYPE.SPAWN_LOCAL:
+                    SpawnLocal(command.playerId);
+                    break;
+                case COMMANDTYPE.SPAWN_REMOTE:
+                    SpawnRemote(command.playerId);
+                    break;
+                case COMMANDTYPE.MOVE:
+                    player = players[command.playerId];
+                    player.AddCommand(command);
+                    break;
+            }
         }
-        while (sendQueue.Count > 0) {
-            command = (Command)sendQueue.Dequeue();
-            serverConnection.SerializeAndSend(command);
-        }
-    }
-
-    int NextSpawnIndex() {
-        return nextSpawnIndex = ++nextSpawnIndex % spawnPoints.Length;
     }
 }
 
