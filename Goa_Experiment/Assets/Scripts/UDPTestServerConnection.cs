@@ -87,7 +87,7 @@ public class UDPTestServerConnection : MonoBehaviour {
 
         while (msgQueue.Count > 0) {
             Command command = DeserializeCommand(msgQueue.Dequeue());
-            updateDelta = command.time - Time.time;
+            updateDelta = Time.realtimeSinceStartup - command.time;
             gameManager.ReceiveQueue.Enqueue(command);
         }
     }
@@ -130,7 +130,7 @@ public class UDPTestServerConnection : MonoBehaviour {
     }
 
     void OnGUI() {
-        txtgui = txtLocalIp + ":" + txtLocalPort + "->" + (updateDelta * 1000).ToString() + "ms  <- fix this it is obviously wrong";
+        txtgui = txtLocalIp + ":" + txtLocalPort + " -> " + (updateDelta * 1000).ToString("F0") + "ms";
         GUI.Label(new Rect(25, 25, 400, 150), txtgui);
     }
 
